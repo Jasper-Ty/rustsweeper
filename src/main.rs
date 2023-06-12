@@ -126,7 +126,9 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     }
     canvas.present();
 
-    let spritesheet = Surface::load_bmp(Path::new("./spritesheet.bmp"))?;
+    let texture_creator = canvas.texture_creator();
+    let spritesheet = Surface::load_bmp(Path::new("./spritesheet.bmp"))?
+        .as_texture(&texture_creator);
 
     'running: loop {
         for event in event_pump.poll_iter() {
