@@ -1,18 +1,19 @@
 use std::ops::{ Index, IndexMut };
 use std::error;
 use std::time::Duration;
-use std::path::Path;
 
 use itertools::Itertools;
 use rand::seq::SliceRandom;
-use rand::{ thread_rng, Rng };
+use rand::{ thread_rng };
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::rect::Rect;
-use sdl2::pixels::{ Color, PixelFormatEnum };
+use sdl2::pixels::{ Color };
 use sdl2::surface::Surface;
 
+use rustsweeper::Spritesheet;
+use rustsweeper::Sprite;
 
 enum PlayState {
     IDLE,
@@ -103,6 +104,10 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let board = Board::new_random(30, 16, 99);
 
     let (mut canvas, mut event_pump) = init_sdl2()?;
+    let texture_creator = canvas.texture_creator();
+
+    let spritesheet = Spritesheet::new(&texture_creator)?;
+
 
     canvas.set_draw_color(Color::RGB(255, 0, 0));
     for y in 0..16 {
@@ -114,21 +119,19 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     canvas.set_draw_color(Color::RGB(0, 0, 255));
     for y in 0..16 {
         for x in 0..30 {
+            let rect = Rect::new(x as i32 * SQ_I32, y as i32 * SQ_I32, SQ_U32, SQ_U32);
             match board[(x, y)] {
                 Cell::Mine => {
-                    canvas.fill_rect(
-                        Rect::new(x as i32 * SQ_I32, y as i32 * SQ_I32, 16, 16)
-                    )?;
+                    spritesheet.draw(&mut canvas, Sprite::Mine, rect); 
                 },
-                Cell::Num(n) => {},
+                Cell::Num(n) => {
+                    spritesheet.draw(&mut canvas, Sprite::Num(n), rect);
+                },
             }
         }
     }
     canvas.present();
 
-    let texture_creator = canvas.texture_creator();
-    let spritesheet = Surface::load_bmp(Path::new("./spritesheet.bmp"))?
-        .as_texture(&texture_creator);
 
     'running: loop {
         for event in event_pump.poll_iter() {
