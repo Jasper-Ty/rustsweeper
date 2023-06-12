@@ -9,6 +9,7 @@ use rand::{ thread_rng, Rng };
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::rect::Rect;
+use sdl2::pixels::Color;
 
 enum PlayState {
     IDLE,
@@ -89,6 +90,10 @@ impl IndexMut<(usize, usize)> for Board {
     }
 }
 
+const SQ_SIZE: usize = 48; 
+const SQ_I32: i32 = SQ_SIZE as i32;
+const SQ_U32: u32 = SQ_SIZE as u32;
+
 fn main() -> Result<(), Box<dyn error::Error>> {
     let state = PlayState::IDLE;
 
@@ -96,11 +101,27 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
     let (mut canvas, mut event_pump) = init_sdl2()?;
 
+    canvas.set_draw_color(Color::RGB(255, 0, 0));
     for y in 0..16 {
         for x in 0..30 {
-            canvas.draw_rect(Rect::new(x*16, y*16, 16, 16))?;
+            canvas.draw_rect(Rect::new(x*SQ_I32, y*SQ_I32, SQ_U32, SQ_U32))?;
         }
     }
+
+    canvas.set_draw_color(Color::RGB(0, 0, 255));
+    for y in 0..16 {
+        for x in 0..30 {
+            match board[(x, y)] {
+                Cell::Mine => {
+                    canvas.fill_rect(
+                        Rect::new(x as i32 * SQ_I32, y as i32 * SQ_I32, 16, 16)
+                    )?;
+                },
+                Cell::Num(n) => {},
+            }
+        }
+    }
+    canvas.present();
 
     'running: loop {
         for event in event_pump.poll_iter() {
@@ -128,13 +149,15 @@ fn init_sdl2() -> Result<(Canvas<Window>, EventPump), Box<dyn error::Error>> {
     let video_subsystem = sdl_context.video()?;
 
     let window = video_subsystem
-        .window("rustsweeper", 480, 256)
+        .window("rustsweeper", 30*SQ_U32, 16*SQ_U32)
         .resizable()
         .position_centered()
         .opengl()
         .build()?;
 
-    let canvas = window.into_canvas().build()?;
+    let canvas = window.into_canvas()
+        .present_vsync()
+        .build()?;
     let event_pump = sdl_context.event_pump()?;
 
     Ok((canvas, event_pump))
