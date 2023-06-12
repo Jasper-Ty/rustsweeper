@@ -1,9 +1,13 @@
 use std::ops::{ Index, IndexMut };
-use itertools::Itertools;
+use std::error;
+use std::time::Duration;
 
-use sdl2;
+use itertools::Itertools;
 use rand::seq::SliceRandom;
 use rand::{ thread_rng, Rng };
+
+use sdl2::event::Event;
+use sdl2::keyboard::Keycode;
 
 enum PlayState {
     IDLE,
@@ -56,17 +60,18 @@ impl Board {
         ];
         for (x, y) in (0..self.width).cartesian_product(0..self.height) {
             if let Cell::Num(_) = self[(x, y)] {
-                let n: u8 = neighborhood.iter()
-                    .map(|(dx, dy)| (x as i32 + dx, y as i32 + dy))
-                    .filter(|(x, y)| 
-                        *x > 0 && *x < self.width as i32
-                        && *y > 0 && *y < self.height as i32)
-                    .map(|(x, y)| match self[(x as usize, y as usize)] {
-                        Cell::Mine => 1,
-                        _ => 0,
-                    })
-                    .sum();
-                self[(x, y)] = Cell::Num(n);
+                self[(x, y)] = Cell::Num(
+                    neighborhood.iter()
+                        .map(|(dx, dy)| (x as i32 + dx, y as i32 + dy))
+                        .filter(|(x, y)| 
+                            *x > 0 && *x < self.width as i32
+                            && *y > 0 && *y < self.height as i32)
+                        .map(|(x, y)| match self[(x as usize, y as usize)] {
+                            Cell::Mine => 1,
+                            _ => 0,
+                        })
+                        .sum()
+                );
             }
         }
     }
@@ -83,9 +88,47 @@ impl IndexMut<(usize, usize)> for Board {
     }
 }
 
-fn main() {
+fn main() -> Result<(), Box<dyn error::Error>> {
     let state = PlayState::IDLE;
 
     let board = Board::new_random(30, 16, 99);
-    println!("{:?}", board.cells);
+
+    let (mut canvas, mut event_pump) = init_sdl2()?;
+
+    'running: loop {
+        for event in event_pump.poll_iter() {
+            match event {
+                Event::Quit{ .. }
+                | Event::KeyDown {
+                    keycode: Some(Keycode::Escape),
+                    ..
+                } => break 'running,
+                _ => {}
+            }
+        }
+
+        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+    }
+
+    Ok(())
+}
+
+use sdl2::EventPump;
+use sdl2::render::Canvas;
+use sdl2::video::Window;
+fn init_sdl2() -> Result<(Canvas<Window>, EventPump), Box<dyn error::Error>> {
+    let sdl_context = sdl2::init()?;
+    let video_subsystem = sdl_context.video()?;
+
+    let window = video_subsystem
+        .window("rustsweeper", 800, 800)
+        .resizable()
+        .position_centered()
+        .opengl()
+        .build()?;
+
+    let canvas = window.into_canvas().build()?;
+    let event_pump = sdl_context.event_pump()?;
+
+    Ok((canvas, event_pump))
 }
