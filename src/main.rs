@@ -1,6 +1,7 @@
 use std::ops::{ Index, IndexMut };
 use std::error;
 use std::time::Duration;
+use std::path::Path;
 
 use itertools::Itertools;
 use rand::seq::SliceRandom;
@@ -9,7 +10,9 @@ use rand::{ thread_rng, Rng };
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::rect::Rect;
-use sdl2::pixels::Color;
+use sdl2::pixels::{ Color, PixelFormatEnum };
+use sdl2::surface::Surface;
+
 
 enum PlayState {
     IDLE,
@@ -123,6 +126,8 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     }
     canvas.present();
 
+    let spritesheet = Surface::load_bmp(Path::new("./spritesheet.bmp"))?;
+
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {
@@ -137,6 +142,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
+
 
     Ok(())
 }
