@@ -8,6 +8,7 @@ use rand::{ thread_rng, Rng };
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
+use sdl2::rect::Rect;
 
 enum PlayState {
     IDLE,
@@ -95,6 +96,12 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 
     let (mut canvas, mut event_pump) = init_sdl2()?;
 
+    for y in 0..16 {
+        for x in 0..30 {
+            canvas.draw_rect(Rect::new(x*16, y*16, 16, 16))?;
+        }
+    }
+
     'running: loop {
         for event in event_pump.poll_iter() {
             match event {
@@ -121,7 +128,7 @@ fn init_sdl2() -> Result<(Canvas<Window>, EventPump), Box<dyn error::Error>> {
     let video_subsystem = sdl_context.video()?;
 
     let window = video_subsystem
-        .window("rustsweeper", 800, 800)
+        .window("rustsweeper", 480, 256)
         .resizable()
         .position_centered()
         .opengl()
