@@ -5,13 +5,8 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 
-use rustsweeper::board::*;
-use rustsweeper::Spritesheet;
-use rustsweeper::Sprite;
+use rustsweeper::*;
 
-const SQ_SIZE: usize = 48; 
-const SQ_I32: i32 = SQ_SIZE as i32;
-const SQ_U32: u32 = SQ_SIZE as u32;
 
 fn main() -> Result<(), Box<dyn error::Error>> {
     let board = Board::new_random(30, 16, 99);
@@ -54,8 +49,9 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             }
         }
 
-        board.draw(&mut canvas, &spritesheet)?;
-        overlay.draw(&mut canvas, &spritesheet)?;
+        board.render(&mut canvas, &spritesheet)?;
+        overlay.render(&mut canvas, &spritesheet)?;
+
         canvas.present();
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
