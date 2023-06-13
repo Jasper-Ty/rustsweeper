@@ -11,21 +11,47 @@ use sdl2::video::Window;
 #[derive(Clone, Copy, Debug)]
 pub enum Sprite {
     Mine,
+    MineRed,
+    MineCross,
     Num(u8),
+    Counter(u8),
     Open,
     Closed,
     Flag,
+    BtnSmile,
+    BtnDown,
+    BtnSurprise,
+    BtnSunglasses,
+    BtnDead,
 }
+
+macro_rules! rect {
+    ($x: expr, $y: expr, $w: expr, $h: expr) => {
+        Rect::new($x as i32, $y as i32, $w as u32, $h as u32)
+    };
+}
+
 impl Sprite {
     pub fn get_rect(&self) -> Rect {
         match self {
-            Sprite::Mine => Rect::new(85, 51, 16, 16),
-            Sprite::Num(i @ 0..=8) => match i {
-                0 => Rect::new(17, 51, 16, 16),
-                1..=8 => Rect::new(17*(*i as i32-1), 68, 16, 16),
-                _ => Rect::new(0, 0, 10, 10),
-            }
-            _ => Rect::new(0, 0, 16, 16),
+            Sprite::Mine => rect!(85, 51, 16, 16),
+            Sprite::MineRed => rect!(102, 51, 16, 16),
+            Sprite::MineCross => rect!(119, 51, 16, 16),
+
+            Sprite::Num(0) => rect!(17, 51, 16, 16),
+            Sprite::Num(i @ 1..=8) => rect!(17*(i-1), 68, 16, 16),
+            Sprite::Counter(i @ 0..=9) => rect!(i*14, 0, 13, 23),
+
+            Sprite::Closed => rect!(0, 51, 16, 16),
+            Sprite::Open => rect!(17, 51, 16, 16),
+            Sprite::Flag => rect!(34, 51, 16, 16),
+
+            Sprite::BtnSmile => rect!(0, 24, 26, 26),
+            Sprite::BtnDown => rect!(27, 24, 26, 26),
+            Sprite::BtnSurprise => rect!(54, 24, 26, 26),
+            Sprite::BtnSunglasses => rect!(81, 24, 26, 26),
+            Sprite::BtnDead => rect!(108, 24, 26, 26),
+            _ => panic!("Invalid Sprite value?")
         }
     }
 }
