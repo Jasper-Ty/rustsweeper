@@ -7,8 +7,7 @@ use sdl2::mouse::MouseButton;
 
 use rustsweeper::*;
 
-
-fn main() -> Result<(), Box<dyn error::Error>> {
+fn main() -> Result<(), String> {
     let board = Board::new_random(30, 16, 99);
     let mut overlay = Overlay::new(30, 16);
 
@@ -63,7 +62,7 @@ fn main() -> Result<(), Box<dyn error::Error>> {
 use sdl2::EventPump;
 use sdl2::render::Canvas;
 use sdl2::video::Window;
-fn init_sdl2() -> Result<(Canvas<Window>, EventPump), Box<dyn error::Error>> {
+fn init_sdl2() -> Result<(Canvas<Window>, EventPump), String> {
     let sdl_context = sdl2::init()?;
     let video_subsystem = sdl_context.video()?;
 
@@ -72,11 +71,13 @@ fn init_sdl2() -> Result<(Canvas<Window>, EventPump), Box<dyn error::Error>> {
         .resizable()
         .position_centered()
         .opengl()
-        .build()?;
+        .build()
+        .map_err(|e| e.to_string())?;
 
     let canvas = window.into_canvas()
         .present_vsync()
-        .build()?;
+        .build()
+        .map_err(|e| e.to_string())?;
     let event_pump = sdl_context.event_pump()?;
 
     Ok((canvas, event_pump))

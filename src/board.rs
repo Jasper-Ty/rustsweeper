@@ -1,8 +1,5 @@
 use std::ops::{ Index, IndexMut };
 
-use crate::Sprite;
-use crate::Spritesheet;
-
 use sdl2::video::Window;
 use sdl2::render::Canvas;
 use sdl2::rect::Rect;
@@ -10,10 +7,6 @@ use sdl2::rect::Rect;
 use itertools::Itertools;
 use rand::seq::SliceRandom;
 use rand::{ thread_rng };
-
-const SQ_SIZE: usize = 48; 
-const SQ_I32: i32 = SQ_SIZE as i32;
-const SQ_U32: u32 = SQ_SIZE as u32;
 
 #[derive(Debug, Clone, Copy)]
 pub enum Cover {
