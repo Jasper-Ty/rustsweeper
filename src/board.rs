@@ -1,8 +1,71 @@
 use std::ops::{ Index, IndexMut };
 
+use super::Sprite;
+use super::Spritesheet;
+
+use sdl2::video::Window;
+use sdl2::render::Canvas;
+use sdl2::rect::Rect;
+
 use itertools::Itertools;
 use rand::seq::SliceRandom;
 use rand::{ thread_rng };
+
+const SQ_SIZE: usize = 48; 
+const SQ_I32: i32 = SQ_SIZE as i32;
+const SQ_U32: u32 = SQ_SIZE as u32;
+
+#[derive(Debug, Clone, Copy)]
+pub enum Cover {
+    Flag,
+    Closed,
+    Open,
+}
+pub struct Overlay {
+    covers: Vec<Cover>,
+    width: usize,
+    height: usize,
+}
+impl Overlay {
+    pub fn new(width: usize, height: usize) -> Self {
+        let covers: Vec<Cover> = vec![Cover::Closed; width*height];
+
+        Self {
+            covers,
+            width,
+            height,
+        }
+    }
+
+    pub fn draw(&self, canvas: &mut Canvas<Window>, spritesheet: &Spritesheet) -> Result<(), String> {
+        for y in 0..16 {
+            for x in 0..30 {
+                let rect = Rect::new(x as i32 * SQ_I32, y as i32 * SQ_I32, SQ_U32, SQ_U32);
+                match self[(x, y)] {
+                    Cover::Flag => {
+                        spritesheet.draw(canvas, Sprite::Flag, rect)?; 
+                    },
+                    Cover::Closed => {
+                        spritesheet.draw(canvas, Sprite::Closed, rect)?;
+                    },
+                    Cover::Open => {},
+                }
+            }
+        }
+        Ok(())
+    }
+}
+impl Index<(usize, usize)> for Overlay {
+    type Output = Cover;
+    fn index(&self, (x, y): (usize, usize)) -> &Self::Output {
+        &self.covers[y*self.width + x]
+    }
+}
+impl IndexMut<(usize, usize)> for Overlay {
+    fn index_mut(&mut self, (x, y): (usize, usize)) -> &mut Self::Output {
+        &mut self.covers[y*self.width + x]
+    }
+}
 
 #[derive(Debug, Clone, Copy)]
 pub enum Cell {
@@ -15,7 +78,6 @@ pub struct Board {
     width: usize,
     height: usize,
 }
- 
 impl Board {
     pub fn new_random(width: usize, height: usize, num_mines: usize) -> Self {
         let cells: Vec<Cell> = vec![Cell::Num(0); width*height];
@@ -62,6 +124,23 @@ impl Board {
                 );
             }
         }
+    }
+
+    pub fn draw(&self, canvas: &mut Canvas<Window>, spritesheet: &Spritesheet) -> Result<(), String> {
+        for y in 0..16 {
+            for x in 0..30 {
+                let rect = Rect::new(x as i32 * SQ_I32, y as i32 * SQ_I32, SQ_U32, SQ_U32);
+                match self[(x, y)] {
+                    Cell::Mine => {
+                        spritesheet.draw(canvas, Sprite::Mine, rect)?; 
+                    },
+                    Cell::Num(n) => {
+                        spritesheet.draw(canvas, Sprite::Num(n), rect)?;
+                    },
+                }
+            }
+        }
+        Ok(())
     }
 }
 impl Index<(usize, usize)> for Board {

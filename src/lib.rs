@@ -19,7 +19,6 @@ pub enum Sprite {
     MineCross,
     Num(u8),
     Counter(u8),
-    Open,
     Closed,
     Flag,
     BtnSmile,
@@ -47,7 +46,6 @@ impl Sprite {
             Sprite::Counter(i @ 0..=9) => rect!(i*14, 0, 13, 23),
 
             Sprite::Closed => rect!(0, 51, 16, 16),
-            Sprite::Open => rect!(17, 51, 16, 16),
             Sprite::Flag => rect!(34, 51, 16, 16),
 
             Sprite::BtnSmile => rect!(0, 24, 26, 26),

@@ -3,8 +3,10 @@ use std::time::Duration;
 
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
+use sdl2::mouse::MouseButton;
 use sdl2::rect::Rect;
 use sdl2::pixels::{ Color };
+
 
 use rustsweeper::board::*;
 use rustsweeper::Spritesheet;
@@ -25,49 +27,46 @@ fn main() -> Result<(), Box<dyn error::Error>> {
     let state = PlayState::IDLE;
 
     let board = Board::new_random(30, 16, 99);
+    let mut overlay = Overlay::new(30, 16);
 
     let (mut canvas, mut event_pump) = init_sdl2()?;
     let texture_creator = canvas.texture_creator();
-
     let spritesheet = Spritesheet::new(&texture_creator)?;
 
-
-    canvas.set_draw_color(Color::RGB(255, 0, 0));
-    for y in 0..16 {
-        for x in 0..30 {
-            canvas.draw_rect(Rect::new(x*SQ_I32, y*SQ_I32, SQ_U32, SQ_U32))?;
-        }
-    }
-
-    canvas.set_draw_color(Color::RGB(0, 0, 255));
-    for y in 0..16 {
-        for x in 0..30 {
-            let rect = Rect::new(x as i32 * SQ_I32, y as i32 * SQ_I32, SQ_U32, SQ_U32);
-            match board[(x, y)] {
-                Cell::Mine => {
-                    spritesheet.draw(&mut canvas, Sprite::Mine, rect)?; 
-                },
-                Cell::Num(n) => {
-                    spritesheet.draw(&mut canvas, Sprite::Num(n), rect)?;
-                },
-            }
-        }
-    }
-    canvas.present();
-
-
     'running: loop {
+        canvas.clear();
         for event in event_pump.poll_iter() {
             match event {
-                Event::Quit{ .. }
+
+                Event::Quit { .. }
                 | Event::KeyDown {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => break 'running,
+
+                Event::MouseButtonUp {
+                    mouse_btn,
+                    x,
+                    y,
+                    ..
+                } => {
+                    let (x, y) = (x / SQ_I32, y / SQ_I32);
+                    match mouse_btn {
+                        MouseButton::Left => {
+                            overlay[(x as usize, y as usize)] = Cover::Open;
+                        },
+                        MouseButton::Right => {},
+                        _ => {},
+                    }
+                },
+
                 _ => {}
             }
         }
 
+        board.draw(&mut canvas, &spritesheet);
+        overlay.draw(&mut canvas, &spritesheet);
+        canvas.present();
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
 
