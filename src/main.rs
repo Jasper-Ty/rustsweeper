@@ -10,7 +10,6 @@ use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::rect::Rect;
 use sdl2::pixels::{ Color };
-use sdl2::surface::Surface;
 
 use rustsweeper::Spritesheet;
 use rustsweeper::Sprite;
@@ -122,10 +121,10 @@ fn main() -> Result<(), Box<dyn error::Error>> {
             let rect = Rect::new(x as i32 * SQ_I32, y as i32 * SQ_I32, SQ_U32, SQ_U32);
             match board[(x, y)] {
                 Cell::Mine => {
-                    spritesheet.draw(&mut canvas, Sprite::Mine, rect); 
+                    spritesheet.draw(&mut canvas, Sprite::Mine, rect)?; 
                 },
                 Cell::Num(n) => {
-                    spritesheet.draw(&mut canvas, Sprite::Num(n), rect);
+                    spritesheet.draw(&mut canvas, Sprite::Num(n), rect)?;
                 },
             }
         }
