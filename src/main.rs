@@ -70,8 +70,8 @@ impl Board {
                     neighborhood.iter()
                         .map(|(dx, dy)| (x as i32 + dx, y as i32 + dy))
                         .filter(|(x, y)| 
-                            *x > 0 && *x < self.width as i32
-                            && *y > 0 && *y < self.height as i32)
+                            *x >= 0 && *x < self.width as i32
+                            && *y >= 0 && *y < self.height as i32)
                         .map(|(x, y)| match self[(x as usize, y as usize)] {
                             Cell::Mine => 1,
                             _ => 0,
