@@ -40,7 +40,10 @@ fn main() -> Result<(), String> {
                             reveal((x, y), &mut overlay, &board);
                         },
                         MouseButton::Right => {
-                            overlay[(x, y)] = Cover::Open;
+                            match overlay[(x, y)] {
+                                Cover::Closed => overlay[(x,y)] = Cover::Flag,
+                                _ => {}
+                            }
                         }
                         _ => {},
                     }
