@@ -1,12 +1,10 @@
 use std::ops::{ Index, IndexMut };
-
-use sdl2::video::Window;
-use sdl2::render::Canvas;
-use sdl2::rect::Rect;
+use std::default::Default;
 
 use itertools::Itertools;
 use rand::seq::SliceRandom;
 use rand::{ thread_rng };
+
 
 #[derive(Debug, Clone, Copy)]
 pub enum Cover {
@@ -14,6 +12,10 @@ pub enum Cover {
     Closed,
     Open,
 }
+impl Default for Cover {
+    fn default() -> Self { Cover::Closed }
+}
+
 pub struct Overlay {
     covers: Vec<Cover>,
     width: usize,
@@ -54,6 +56,9 @@ pub struct Board {
     height: usize,
 }
 impl Board {
+    pub fn width(&self) -> usize { self.width }
+    pub fn height(&self) -> usize { self.height }
+
     pub fn new_random(width: usize, height: usize, num_mines: usize) -> Self {
         let cells: Vec<Cell> = vec![Cell::Num(0); width*height];
 

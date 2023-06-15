@@ -8,7 +8,7 @@ use sdl2::mouse::MouseButton;
 use rustsweeper::*;
 
 fn main() -> Result<(), String> {
-    let board = Board::new_random(30, 16, 99);
+    let board = Board::new_random(30, 16, 50);
     let mut overlay = Overlay::new(30, 16);
 
     let (mut canvas, mut event_pump) = init_sdl2()?;
@@ -33,12 +33,14 @@ fn main() -> Result<(), String> {
                     ..
                 } => {
                     let (x, y) = (x / SQ_I32, y / SQ_I32);
+                    let (x, y) = (x as usize, y as usize);
                     match mouse_btn {
                         MouseButton::Left => {
-                            overlay[(x as usize, y as usize)] = Cover::Open;
+                            overlay[(x, y)] = Cover::Open;
+                            reveal((x, y), &mut overlay, &board);
                         },
                         MouseButton::Right => {
-                            overlay[(x as usize, y as usize)] = Cover::Open;
+                            overlay[(x, y)] = Cover::Open;
                         }
                         _ => {},
                     }
