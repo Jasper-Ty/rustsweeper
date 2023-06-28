@@ -12,45 +12,40 @@ pub trait Render {
     -> Result<(), String>; 
 }
 
-impl Render for Overlay {
-    fn render(
-        &self, 
-        canvas: &mut Canvas<Window>, 
-        spritesheet: &Spritesheet) 
-    -> Result<(), String> {
-        for y in 0..16 {
-            for x in 0..30 {
-                let rect = Rect::new(x as i32 * SQ_I32, y as i32 * SQ_I32, SQ_U32, SQ_U32);
-                match self[(x, y)] {
-                    Cover::Flag => {
-                        spritesheet.draw(canvas, Sprite::Flag, rect)?; 
-                    },
-                    Cover::Closed => {
-                        spritesheet.draw(canvas, Sprite::Closed, rect)?;
-                    },
-                    Cover::Open => {},
-                }
-            }
-        }
-        Ok(())
-    }
-}
-
 impl Render for Board {
     fn render(
         &self, 
         canvas: &mut Canvas<Window>, 
         spritesheet: &Spritesheet) 
     -> Result<(), String> {
-        for y in 0..16 {
-            for x in 0..30 {
+        for y in 0..self.height() {
+            for x in 0..self.width() {
                 let rect = Rect::new(x as i32 * SQ_I32, y as i32 * SQ_I32, SQ_U32, SQ_U32);
                 match self[(x, y)] {
-                    Cell::Mine => {
+                    Cell {
+                        open: false,
+                        flag: true,
+                        ..
+                    } => {
+                            spritesheet.draw(canvas, Sprite::Flag, rect)?; 
+                    },
+                    Cell {
+                        open: false,
+                        ..
+                    } => {
+                            spritesheet.draw(canvas, Sprite::Closed, rect)?; 
+                    },
+                    Cell {
+                        mine: true,
+                        ..
+                    } => {
                         spritesheet.draw(canvas, Sprite::Mine, rect)?; 
                     },
-                    Cell::Num(n) => {
-                        spritesheet.draw(canvas, Sprite::Num(n), rect)?;
+                    Cell {
+                        num: n,
+                        ..
+                    } => {
+                        spritesheet.draw(canvas, Sprite::Num(n), rect)?; 
                     },
                 }
             }

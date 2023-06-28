@@ -7,16 +7,35 @@ use sdl2::mouse::MouseButton;
 
 use rustsweeper::*;
 
+pub enum GameState {
+    Init,
+    Play,
+    Win,
+    Lose,
+}
+
 fn main() -> Result<(), String> {
-    let board = Board::new_random(30, 16, 50);
-    let mut overlay = Overlay::new(30, 16);
+
+    let state = GameState::Init;
+
+    let width = 30;
+    let height = 16;
+    let num_mines = 10;
+
+    let board = Board::new(width, height);
 
     let (mut canvas, mut event_pump) = init_sdl2()?;
     let texture_creator = canvas.texture_creator();
     let spritesheet = Spritesheet::new(&texture_creator)?;
 
+    let to_open = width * height - num_mines;
+
     'running: loop {
         canvas.clear();
+
+        let board_click = false;
+        let btn_click = false;
+
         for event in event_pump.poll_iter() {
             match event {
 
@@ -36,14 +55,23 @@ fn main() -> Result<(), String> {
                     let (x, y) = (x as usize, y as usize);
                     match mouse_btn {
                         MouseButton::Left => {
-                            overlay[(x, y)] = Cover::Open;
-                            reveal((x, y), &mut overlay, &board);
+                            /*
+                            if let Cover::Closed = overlay[(x, y)] {
+                                if let Cell::Mine = board[(x,y)] {
+                                    println!("GAME OVER");
+                                }
+                                overlay[(x, y)] = Cover::Open;
+                                //reveal((x, y), &mut overlay, &board);
+                            } 
+                            */
                         },
                         MouseButton::Right => {
+                            /*
                             match overlay[(x, y)] {
                                 Cover::Closed => overlay[(x,y)] = Cover::Flag,
                                 _ => {}
                             }
+                            */
                         }
                         _ => {},
                     }
@@ -51,10 +79,9 @@ fn main() -> Result<(), String> {
 
                 _ => {}
             }
+            
         }
-
-        board.render(&mut canvas, &spritesheet)?;
-        overlay.render(&mut canvas, &spritesheet)?;
+        board.render(&mut canvas, &spritesheet);
 
         canvas.present();
         ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
@@ -72,7 +99,7 @@ fn init_sdl2() -> Result<(Canvas<Window>, EventPump), String> {
     let video_subsystem = sdl_context.video()?;
 
     let window = video_subsystem
-        .window("rustsweeper", 30*SQ_U32, 16*SQ_U32)
+        .window("rustsweeper", 32+30*SQ_U32, 32+16*SQ_U32)
         .resizable()
         .position_centered()
         .opengl()
