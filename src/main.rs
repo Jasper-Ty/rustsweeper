@@ -68,12 +68,10 @@ fn main() -> Result<(), String> {
                             }
                         },
                         MouseButton::Right => {
-                            /*
-                            match overlay[(x, y)] {
-                                Cover::Closed => overlay[(x,y)] = Cover::Flag,
-                                _ => {}
+                            let sq = &mut board[(x, y)];
+                            if sq.open == false {
+                                sq.mine = true;
                             }
-                            */
                         }
                         _ => {},
                     }
