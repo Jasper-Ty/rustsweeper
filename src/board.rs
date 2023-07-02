@@ -75,17 +75,22 @@ impl Board {
             .map(|(x, y)| (x as usize, y as usize))
     }
 
-    pub fn generate(&mut self, num_mines: usize) {
+    pub fn generate(&mut self, num_mines: usize, (x, y): (usize, usize)) {
         // generate mines
-        let mut mines = vec![false; self.width() * self.height()];
+        let mut mines = vec![false; self.width() * self.height() - 1];
         for i in 0..num_mines {
             mines[i] = true;
         }
         mines.shuffle(&mut thread_rng());
 
+        let skip_idx = y * self.width() + x;
         // assign mines
         for (i, m) in mines.iter().enumerate() {
-            self.cells[i].mine = *m;
+            if i >= skip_idx {
+                self.cells[i+1].mine = *m;
+            } else {
+                self.cells[i].mine = *m;
+            }
         }
 
         // generate numbers

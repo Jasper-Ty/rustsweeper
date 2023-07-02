@@ -16,13 +16,13 @@ pub enum GameState {
 
 fn main() -> Result<(), String> {
 
-    let state = GameState::Init;
+    let mut state = GameState::Init;
 
     let width = 30;
     let height = 16;
     let num_mines = 10;
 
-    let board = Board::new(width, height);
+    let mut board = Board::new(width, height);
 
     let (mut canvas, mut event_pump) = init_sdl2()?;
     let texture_creator = canvas.texture_creator();
@@ -55,15 +55,17 @@ fn main() -> Result<(), String> {
                     let (x, y) = (x as usize, y as usize);
                     match mouse_btn {
                         MouseButton::Left => {
-                            /*
-                            if let Cover::Closed = overlay[(x, y)] {
-                                if let Cell::Mine = board[(x,y)] {
+                            if let GameState::Init = state {
+                                board.generate(num_mines, (x, y));
+                                state = GameState::Play;
+                            }
+                            let sq = &mut board[(x, y)];
+                            if sq.open == false {
+                                if sq.mine {
                                     println!("GAME OVER");
                                 }
-                                overlay[(x, y)] = Cover::Open;
-                                //reveal((x, y), &mut overlay, &board);
-                            } 
-                            */
+                                sq.open = true;
+                            }
                         },
                         MouseButton::Right => {
                             /*
