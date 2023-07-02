@@ -70,7 +70,7 @@ fn main() -> Result<(), String> {
                         MouseButton::Right => {
                             let sq = &mut board[(x, y)];
                             if sq.open == false {
-                                sq.mine = true;
+                                sq.flag = true;
                             }
                         }
                         _ => {},
