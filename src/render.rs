@@ -20,20 +20,30 @@ impl Render for Board {
     -> Result<(), String> {
         for y in 0..self.height() {
             for x in 0..self.width() {
-                let rect = Rect::new(x as i32 * SQ_I32, y as i32 * SQ_I32, SQ_U32, SQ_U32);
+                let rect = rect!(
+                    (x*SQ_SIZE) as i32 + BOARD_X,
+                    (y*SQ_SIZE) as i32 + BOARD_Y,
+                    SQ_SIZE, 
+                    SQ_SIZE
+                );
                 match self[(x, y)] {
                     Cell {
                         open: false,
                         flag: true,
                         ..
                     } => {
-                            spritesheet.draw(canvas, Sprite::Flag, rect)?; 
+                        spritesheet.draw(canvas, Sprite::Flag, rect)?; 
                     },
                     Cell {
                         open: false,
                         ..
                     } => {
-                            spritesheet.draw(canvas, Sprite::Closed, rect)?; 
+                        match self.tentative {
+                            Some((tx, ty)) if (tx, ty) == (x, y) => {
+                                spritesheet.draw(canvas, Sprite::Num(0), rect)?; 
+                            },
+                            _ => { spritesheet.draw(canvas, Sprite::Closed, rect)?; }
+                        }
                     },
                     Cell {
                         mine: true,

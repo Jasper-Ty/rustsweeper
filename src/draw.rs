@@ -8,6 +8,8 @@ use sdl2::render::TextureCreator;
 use sdl2::video::WindowContext;
 use sdl2::video::Window;
 
+use crate::rect;
+
 #[derive(Clone, Copy, Debug)]
 pub enum Sprite {
     Mine,
@@ -22,12 +24,6 @@ pub enum Sprite {
     BtnSurprise,
     BtnSunglasses,
     BtnDead,
-}
-
-macro_rules! rect {
-    ($x: expr, $y: expr, $w: expr, $h: expr) => {
-        Rect::new($x as i32, $y as i32, $w as u32, $h as u32)
-    };
 }
 
 impl Sprite {

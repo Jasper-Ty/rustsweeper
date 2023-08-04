@@ -1,8 +1,12 @@
 use std::ops::{ Index, IndexMut };
 use std::default::Default;
 
+use sdl2::rect::Rect;
 use rand::seq::SliceRandom;
-use rand::{ thread_rng };
+use rand::thread_rng;
+
+
+// Actions
 
 /// A single unit of the Minesweeper board
 #[derive(Debug, Clone, Copy)]
@@ -32,6 +36,7 @@ pub struct Board {
     cells: Vec<Cell>,
     width: usize,
     height: usize,
+    pub tentative: Option<(usize, usize)>,
 }
 impl Board {
     const NEIGHBORHOOD: [(i32, i32); 8] = [
@@ -47,6 +52,7 @@ impl Board {
             cells,
             width,
             height,
+            tentative: None,
         }
     }
 
@@ -58,11 +64,25 @@ impl Board {
         }
     }
 
+    /// Opens a square. Returns the cell that was opened.
+    pub fn open(&mut self, p: (usize, usize)) -> Cell {
+       self[p].open = true; 
+       if self[p].num == 0 && !self[p].mine {
+           for neighbor in self.get_neighborhood(p) {
+               if !(self[neighbor].open || self[neighbor].mine) {
+                   self.open(neighbor);
+               }
+           }
+       }
+
+       self[p]
+    }
+
     pub fn width(&self) -> usize { self.width }
 
     pub fn height(&self) -> usize { self.height }
 
-    pub fn get_neighborhood(
+    fn get_neighborhood(
         &self, 
         (x, y): (usize, usize)) 
     -> impl Iterator<Item=(usize, usize)> {
@@ -104,7 +124,6 @@ impl Board {
         }
     }
 }
-
 impl Index<(usize, usize)> for Board {
     type Output = Cell;
     fn index(&self, (x, y): (usize, usize)) -> &Self::Output {
@@ -259,7 +278,7 @@ pub mod test {
             println!();
         }
 
-        board.generate(10);
+        board.generate(10, (0, 0));
 
         println!("== AFTER ==");
         for x in 0..width {
