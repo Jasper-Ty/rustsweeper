@@ -1,7 +1,10 @@
 pub mod board;
+pub mod button;
 pub mod draw;
 pub mod render;
+pub mod action;
 
+pub use action::*;
 pub use board::*;
 pub use draw::*;
 pub use render::*;
@@ -32,9 +35,3 @@ pub enum GameState {
 pub const BTN_SIZE: usize = 26;
 pub const BTN_X: i32 = 0;
 pub const BTN_Y: i32 = 0;
-
-pub const BOARD_X: i32 = 0;
-pub const BOARD_Y: i32 = 26;
-pub const SQ_SIZE: usize = 16; 
-pub const SQ_I32: i32 = SQ_SIZE as i32;
-pub const SQ_U32: u32 = SQ_SIZE as u32;

@@ -1,39 +1,34 @@
 use std::time::Duration;
-
 use sdl2::rect::Rect;
-use sdl2::event::Event;
 use sdl2::event::EventType;
+use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::mouse::MouseButton;
 
 use rustsweeper::*;
 
-pub enum Click {
-    LeftUp,
-    LeftDown,
-    RightUp,
-    RightDown,
-}
-pub enum Action {
-    BoardClick {
-        click: Click,
-        board_x: usize,
-        board_y: usize,
-    },
-    BtnClick,
-    Quit,
-    None,
-}
-
 fn main() -> Result<(), String> {
 
-    let mut state = GameState::Init;
+    let mut game_state = GameState::Init;
+    let mut input_state = InputState::None;
 
     let width = 30;
     let height = 16;
     let num_mines = 50;
 
     let mut board = Board::new(width, height);
+    let board_rect = rect!(
+        BOARD_X, 
+        BOARD_Y, 
+        board.width()*SQ_SIZE,
+        board.height()*SQ_SIZE
+    );
+    let btn_rect = rect!(
+        BTN_X,
+        BTN_Y,
+        BTN_SIZE,
+        BTN_SIZE
+    );
 
     let (mut canvas, mut event_pump) = init_sdl2(width, height)?;
     let texture_creator = canvas.texture_creator();
@@ -43,53 +38,31 @@ fn main() -> Result<(), String> {
         canvas.clear();
 
         for event in event_pump.poll_iter() {
-            let action = match event {
-                /* Exit */
+            let action = match &event {
                 Event::Quit { .. }
                 | Event::KeyDown {
                     keycode: Some(Keycode::Escape),
                     ..
                 } => Action::Quit,
 
-                /* Click */
-                Event::MouseButtonUp {
-                    mouse_btn, x,y,
-                    ..
-                } 
-                | Event::MouseButtonDown {
-                    mouse_btn, y, x,
-                    ..
-                }=> {
-                    let click = match (event, mouse_btn) {
-                        (Event::MouseButtonUp {..}, MouseButton::Left) => Click::LeftUp,
-                        (Event::MouseButtonDown {..}, MouseButton::Left) => Click::LeftDown,
-                        (Event::MouseButtonUp {..}, MouseButton::Right) => Click::LeftUp,
-                        (Event::MouseButtonDown {..}, MouseButton::Right) => Click::LeftDown,
-                        _ => Click::LeftDown,
-                    };
-                    let board_rect = rect!(
-                        BOARD_X, 
-                        BOARD_Y, 
-                        board.width()*SQ_SIZE,
-                        board.height()*SQ_SIZE
-                    );
-                    let btn_rect = rect!(
-                        BTN_X,
-                        BTN_Y,
-                        BTN_SIZE,
-                        BTN_SIZE
-                    );
-                    if board_rect.contains_point((x, y)) {
-                        let (board_x, board_y) = { 
-                            let (rel_x, rel_y) = (
-                                (x - BOARD_X) as usize, 
-                                (y - BOARD_Y) as usize
-                            );
-                            (rel_x/SQ_SIZE, rel_y/SQ_SIZE)
+                edge @ Event::MouseButtonUp { mouse_btn, x, y, .. } 
+                | edge @ Event::MouseButtonDown { mouse_btn, x, y, .. } => {
+                    if board_rect.contains_point((*x, *y)) {
+                        let (x, y) = Board::coord(*x, *y);                   
+                        let input_action = match (edge, mouse_btn) {
+                            (Event::MouseButtonUp {..}, MouseButton::Left) 
+                                => InputAction::LeftUp(x, y),
+                            (Event::MouseButtonDown {..}, MouseButton::Left) 
+                                => InputAction::LeftDown(x, y),
+                            (Event::MouseButtonUp {..}, MouseButton::Right) 
+                                => InputAction::RightUp(x, y),
+                            (Event::MouseButtonDown {..}, MouseButton::Right) 
+                                => InputAction::RightDown(x, y),
+                            _ => InputAction::None,
                         };
-                        Action::BoardClick { click, board_x, board_y }
-                    } else if btn_rect.contains_point((x, y)) {
-                        Action::BtnClick
+                        input_state.transition(input_action)
+                    } else if btn_rect.contains_point((*x, *y)) {
+                        Action::Btn
                     } else {
                         Action::None
                     }
@@ -98,60 +71,44 @@ fn main() -> Result<(), String> {
                 _ => Action::None 
             };
 
-            match &action { 
-                Action::None => {},
-                _ => println!("state: {:?}", state),
-            }
-
-            match (&state, action) {
+            match (&game_state, action) {
                 (_, Action::Quit) => break 'running,
-                (GameState::Init, Action::BoardClick { click,  board_x, board_y }) => {
-                    match click {
-                        Click::LeftUp => {
-                            state = GameState::Play;
-                            board.generate(num_mines, (board_x, board_y));
-                            board.open((board_x, board_y));
-                        }
-                        _ => {}
+                (GameState::Init, Action::Open(x, y)) => {
+                    game_state = GameState::Play;
+                    board.generate(num_mines, (x, y));
+                    board.open((x, y));
+                },
+                (GameState::Play, Action::Open(x, y)) => {
+                    let cell = board.open((x, y));
+                    if cell.mine {
+                        game_state = GameState::Lose;
                     }
                 },
-                (GameState::Play, Action::BoardClick { click, board_x, board_y }) => {
-                    match click {
-                        Click::LeftUp => {
-                            board.tentative = None;
-                            let cell = board.open((board_x, board_y));
-                            if cell.mine {
-                                state = GameState::Lose;
-                            }
-                        },
-                        Click::LeftDown => {
-                            board.tentative = Some((board_x, board_y));
-                        }
-                        _ => {}
-                    }
+                (GameState::Play, Action::Flag(x, y)) => {
+                    board[(x, y)].flag = true;
                 },
-                (GameState::Play, Action::BtnClick) 
-                | (GameState::Lose, Action::BtnClick) => {
-                    state = GameState::Init;
+                (GameState::Play, Action::Btn) 
+                | (GameState::Lose, Action::Btn) => {
+                    game_state = GameState::Init;
                     board.reset();
                 },
                 (_, _) => {}
             }
-
         }
 
-        
+        let mouse_state = event_pump.mouse_state();
+        let (x, y) = Board::coord(mouse_state.x(), mouse_state.y());
+        input_state = match input_state {
+            InputState::Left(..) => InputState::Left(x, y),
+            InputState::Chord(..) => InputState::Chord(x, y),
+            _ => input_state, 
+        };
         spritesheet.draw(&mut canvas, Sprite::BtnSmile, rect!(BTN_X, BTN_Y, BTN_SIZE, BTN_SIZE))?;
 
-        match board.render(&mut canvas, &spritesheet) {
-            Err(_) => break 'running,
-            _ => {}
-        }
-
+        board.render(&mut canvas, &spritesheet, &game_state, &input_state)?;
         canvas.present();
-        ::std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+        std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
     }
-
 
     Ok(())
 }
@@ -159,7 +116,6 @@ fn main() -> Result<(), String> {
 use sdl2::EventPump;
 use sdl2::render::Canvas;
 use sdl2::video::Window;
-
 
 fn init_sdl2(width: usize, height: usize) -> Result<(Canvas<Window>, EventPump), String> {
     let (width, height) = (width as u32, height as u32);

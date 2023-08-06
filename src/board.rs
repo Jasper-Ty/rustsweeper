@@ -1,12 +1,14 @@
 use std::ops::{ Index, IndexMut };
 use std::default::Default;
 
-use sdl2::rect::Rect;
 use rand::seq::SliceRandom;
 use rand::thread_rng;
 
-
-// Actions
+pub const BOARD_X: i32 = 0;
+pub const BOARD_Y: i32 = 26;
+pub const SQ_SIZE: usize = 16; 
+pub const SQ_U32: u32 = SQ_SIZE as u32; 
+pub const SQ_I32: i32 = SQ_SIZE as i32; 
 
 /// A single unit of the Minesweeper board
 #[derive(Debug, Clone, Copy)]
@@ -36,14 +38,27 @@ pub struct Board {
     cells: Vec<Cell>,
     width: usize,
     height: usize,
-    pub tentative: Option<(usize, usize)>,
 }
 impl Board {
+    pub const X: i32 = 0;
+    pub const Y: i32 = 26;
+    pub const SQ_SIZE: usize = 16; 
+    pub const SQ_U32: u32 = SQ_SIZE as u32; 
+    pub const SQ_I32: i32 = SQ_SIZE as i32; 
+
     const NEIGHBORHOOD: [(i32, i32); 8] = [
         (-1, -1), (0, -1), (1, -1),
         (-1,  0),          (1,  0),
         (-1,  1), (0,  1), (1,  1),
     ];
+
+    pub fn coord(x: i32, y: i32) -> (usize, usize) {
+        let (rel_x, rel_y) = (
+            (x - Self::X) as usize, 
+            (y - Self::Y) as usize
+        );
+        (rel_x/Self::SQ_SIZE, rel_y/Self::SQ_SIZE)
+    }
 
     pub fn new(width: usize, height: usize) -> Self {
         let cells = vec![Cell::default(); width*height];
@@ -52,7 +67,6 @@ impl Board {
             cells,
             width,
             height,
-            tentative: None,
         }
     }
 

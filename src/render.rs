@@ -8,16 +8,20 @@ pub trait Render {
     fn render(
         &self, 
         canvas: &mut Canvas<Window>, 
-        spritesheet: &Spritesheet) 
-    -> Result<(), String>; 
+        spritesheet: &Spritesheet,
+        game_state: &GameState,
+        input_state: &InputState,
+    ) -> Result<(), String>; 
 }
 
 impl Render for Board {
     fn render(
         &self, 
         canvas: &mut Canvas<Window>, 
-        spritesheet: &Spritesheet) 
-    -> Result<(), String> {
+        spritesheet: &Spritesheet,
+        game_state: &GameState,
+        input_state: &InputState,
+    ) -> Result<(), String> {
         for y in 0..self.height() {
             for x in 0..self.width() {
                 let rect = rect!(
@@ -26,7 +30,25 @@ impl Render for Board {
                     SQ_SIZE, 
                     SQ_SIZE
                 );
+                let tentative = match input_state {
+                    InputState::Left(ix, iy) 
+                    | InputState::Chord(ix, iy) if (*ix, *iy) == (x, y) => true,
+                    _ => false
+                };
+
                 match self[(x, y)] {
+                    Cell {
+                        open: false,
+                        flag: true,
+                        mine: false,
+                        ..
+                    } => {
+                        if let GameState::Lose = game_state {
+                            spritesheet.draw(canvas, Sprite::MineCross, rect)?; 
+                        } else {
+                            spritesheet.draw(canvas, Sprite::Flag, rect)?; 
+                        } 
+                    },
                     Cell {
                         open: false,
                         flag: true,
@@ -36,20 +58,32 @@ impl Render for Board {
                     },
                     Cell {
                         open: false,
+                        mine: true,
                         ..
                     } => {
-                        match self.tentative {
-                            Some((tx, ty)) if (tx, ty) == (x, y) => {
-                                spritesheet.draw(canvas, Sprite::Num(0), rect)?; 
-                            },
-                            _ => { spritesheet.draw(canvas, Sprite::Closed, rect)?; }
+                        if let GameState::Lose = game_state {
+                            spritesheet.draw(canvas, Sprite::Mine, rect)?; 
+                        } else if tentative {
+                            spritesheet.draw(canvas, Sprite::Num(0), rect)?; 
+                        } else {
+                            spritesheet.draw(canvas, Sprite::Closed, rect)?; 
+                        }
+                    },
+                    Cell {
+                        open: false,
+                        ..
+                    } => {
+                        if tentative {
+                            spritesheet.draw(canvas, Sprite::Num(0), rect)?; 
+                        } else {
+                            spritesheet.draw(canvas, Sprite::Closed, rect)?; 
                         }
                     },
                     Cell {
                         mine: true,
                         ..
                     } => {
-                        spritesheet.draw(canvas, Sprite::Mine, rect)?; 
+                        spritesheet.draw(canvas, Sprite::MineRed, rect)?; 
                     },
                     Cell {
                         num: n,
