@@ -33,6 +33,17 @@ impl Default for Cell {
     }
 }
 
+trait MineBoard {
+    type IndexShape;
+
+    const NEIGHBORHOOD: [Self::IndexShape];
+    const X: i32;
+    const Y: i32;
+    const SQ_SIZE: usize; 
+
+    fn open(&mut self) -> Cell;
+}
+
 /// The Minesweeper board
 pub struct Board {
     cells: Vec<Cell>,
@@ -52,6 +63,7 @@ impl Board {
         (-1,  1), (0,  1), (1,  1),
     ];
 
+    /// Converts coordinates in pixels to the corresponding square
     pub fn coord(x: i32, y: i32) -> (usize, usize) {
         let (rel_x, rel_y) = (
             (x - Self::X) as usize, 
@@ -60,6 +72,7 @@ impl Board {
         (rel_x/Self::SQ_SIZE, rel_y/Self::SQ_SIZE)
     }
 
+    /// Creates a new board.
     pub fn new(width: usize, height: usize) -> Self {
         let cells = vec![Cell::default(); width*height];
 
@@ -70,6 +83,7 @@ impl Board {
         }
     }
 
+    /// Clears out the board to the default Cell.
     pub fn reset(&mut self) {
         for x in 0..self.width {
             for y in 0..self.height {
@@ -78,18 +92,36 @@ impl Board {
         }
     }
 
-    /// Opens a square. Returns the cell that was opened.
-    pub fn open(&mut self, p: (usize, usize)) -> Cell {
-       self[p].open = true; 
-       if self[p].num == 0 && !self[p].mine {
-           for neighbor in self.get_neighborhood(p) {
-               if !(self[neighbor].open || self[neighbor].mine) {
-                   self.open(neighbor);
-               }
-           }
-       }
+    /// Opens a square. Returns whether or not it loses the game.
+    pub fn open(&mut self, p: (usize, usize)) -> bool {
+        if !self[p].open && !self[p].flag {
+            self[p].open = true; 
+            if self[p].num == 0 && !self[p].mine {
+                for neighbor in self.get_neighborhood(p) {
+                    if !(self[neighbor].open || self[neighbor].mine) {
+                        self.open(neighbor);
+                    }
+                }
+            }
+            self[p].mine
+        } else {
+            false
+        }
+    }
 
-       self[p]
+    /// Chords
+    pub fn chord(&mut self, p: (usize, usize)) {
+        if self[p].mine == false && self[p].open {
+            let flags = self.get_neighborhood(p)
+                .filter(|(x, y)| self[(*x, *y)].flag)
+                .count();
+            println!("flags: {}, num: {}", flags, self[p].num);
+            if self[p].num as usize == flags {
+                for neighbor in self.get_neighborhood(p) {
+                    self.open(neighbor);
+                }
+            } 
+        }
     }
 
     pub fn width(&self) -> usize { self.width }

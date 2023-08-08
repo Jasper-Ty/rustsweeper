@@ -1,10 +1,3 @@
-use sdl2::event::Event;
-use sdl2::rect::Rect;
-use sdl2::keyboard::Keycode;
-use sdl2::mouse::MouseButton;
-
-use crate::*;
-
 pub enum Click {
     LeftUp,
     LeftDown,
@@ -77,6 +70,7 @@ impl InputState {
         }
     }
 }
+
 pub enum InputAction {
     LeftUp(usize, usize),
     LeftDown(usize, usize),

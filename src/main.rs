@@ -79,13 +79,19 @@ fn main() -> Result<(), String> {
                     board.open((x, y));
                 },
                 (GameState::Play, Action::Open(x, y)) => {
-                    let cell = board.open((x, y));
-                    if cell.mine {
+                    let lose = board.open((x, y));
+                    if lose {
                         game_state = GameState::Lose;
                     }
                 },
+                (GameState::Play, Action::Chord(x, y)) => {
+                    board.chord((x, y));
+                    println!("Chord");
+                },
                 (GameState::Play, Action::Flag(x, y)) => {
-                    board[(x, y)].flag = true;
+                    if board[(x, y)].open == false {
+                        board[(x, y)].flag = !board[(x, y)].flag;
+                    }
                 },
                 (GameState::Play, Action::Btn) 
                 | (GameState::Lose, Action::Btn) => {
