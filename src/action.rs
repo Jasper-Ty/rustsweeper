@@ -7,61 +7,61 @@ pub enum Click {
 
 pub enum InputState {
     None,
-    Left(usize, usize),
+    Left,
     Right,
-    Chord(usize, usize),
+    Chord,
 }
 impl InputState {
-    pub fn transition (&mut self, input_action: InputAction) -> Action {
+    pub fn transition (&mut self, input_action: InputAction, (x, y): (usize, usize)) -> Action {
         match input_action {
-            InputAction::LeftUp(x, y) => {
+            InputAction::LeftUp => {
                 match self {
-                    InputState::Left(..) => {
+                    InputState::Left => {
                         *self = InputState::None;
                         Action::Open(x, y)
                     },
-                    InputState::Chord(..) => {
-                        *self = InputState::None;
+                    InputState::Chord => {
+                        *self = InputState::Right;
                         Action::Chord(x, y)
                     },
                     _ => Action::None,
                 }
             }
-            InputAction::LeftDown(x, y) => {
+            InputAction::LeftDown => {
                 match self {
                     InputState::None => {
-                        *self = InputState::Left(x, y);
+                        *self = InputState::Left;
                         Action::None
                     },
                     InputState::Right => {
-                        *self = InputState::Chord(x, y);
+                        *self = InputState::Chord;
                         Action::None
                     }
                     _ => Action::None,
                 }
             }
-            InputAction::RightUp(x, y) => {
+            InputAction::RightUp => {
                 match self {
                     InputState::Right => {
                         *self = InputState::None;
                         Action::None
                     },
-                    InputState::Chord(..) => {
-                        *self = InputState::None;
+                    InputState::Chord => {
+                        *self = InputState::Left;
                         Action::Chord(x, y)
                     },
                     _ => Action::None,
                 }
             }
-            InputAction::RightDown(x, y) => {
+            InputAction::RightDown => {
                 match self {
                     InputState::None => {
                         *self = InputState::Right;
                         Action::Flag(x, y)
                     },
-                    InputState::Left(..) => {
-                        *self = InputState::Chord(x, y);
-                        Action::Flag(x, y)
+                    InputState::Left => {
+                        *self = InputState::Chord;
+                        Action::None
                     },
                     _ => Action::None,
                 }
@@ -72,10 +72,10 @@ impl InputState {
 }
 
 pub enum InputAction {
-    LeftUp(usize, usize),
-    LeftDown(usize, usize),
-    RightUp(usize, usize),
-    RightDown(usize, usize),
+    LeftUp,
+    LeftDown,
+    RightUp,
+    RightDown,
     None,
 }
 

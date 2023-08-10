@@ -30,12 +30,8 @@ impl Render for Board {
                     SQ_SIZE, 
                     SQ_SIZE
                 );
-                let tentative = match input_state {
-                    InputState::Left(ix, iy) 
-                    | InputState::Chord(ix, iy) if (*ix, *iy) == (x, y) => true,
-                    _ => false
-                };
 
+                let tentative = false;
                 match self[(x, y)] {
                     Cell {
                         open: false,

@@ -109,8 +109,8 @@ impl Board {
         }
     }
 
-    /// Chords
-    pub fn chord(&mut self, p: (usize, usize)) {
+    /// Chords. Returns whether or not it loses the game
+    pub fn chord(&mut self, p: (usize, usize)) -> bool {
         if self[p].mine == false && self[p].open {
             let flags = self.get_neighborhood(p)
                 .filter(|(x, y)| self[(*x, *y)].flag)
@@ -118,10 +118,13 @@ impl Board {
             println!("flags: {}, num: {}", flags, self[p].num);
             if self[p].num as usize == flags {
                 for neighbor in self.get_neighborhood(p) {
-                    self.open(neighbor);
+                    if self.open(neighbor) {
+                        return true
+                    }
                 }
             } 
-        }
+        } 
+        false
     }
 
     pub fn width(&self) -> usize { self.width }

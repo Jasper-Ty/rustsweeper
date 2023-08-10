@@ -41,26 +41,27 @@ fn main() -> Result<(), String> {
             let action = match &event {
                 Event::Quit { .. }
                 | Event::KeyDown {
-                    keycode: Some(Keycode::Escape),
+                    keycode: Some(Keycode::Escape) | Some(Keycode::Q),
                     ..
                 } => Action::Quit,
 
                 edge @ Event::MouseButtonUp { mouse_btn, x, y, .. } 
                 | edge @ Event::MouseButtonDown { mouse_btn, x, y, .. } => {
                     if board_rect.contains_point((*x, *y)) {
-                        let (x, y) = Board::coord(*x, *y);                   
                         let input_action = match (edge, mouse_btn) {
                             (Event::MouseButtonUp {..}, MouseButton::Left) 
-                                => InputAction::LeftUp(x, y),
+                                => InputAction::LeftUp,
                             (Event::MouseButtonDown {..}, MouseButton::Left) 
-                                => InputAction::LeftDown(x, y),
+                                => InputAction::LeftDown,
                             (Event::MouseButtonUp {..}, MouseButton::Right) 
-                                => InputAction::RightUp(x, y),
+                                => InputAction::RightUp,
                             (Event::MouseButtonDown {..}, MouseButton::Right) 
-                                => InputAction::RightDown(x, y),
+                                => InputAction::RightDown,
                             _ => InputAction::None,
                         };
-                        input_state.transition(input_action)
+
+                        let (x, y) = Board::coord(*x, *y);                   
+                        input_state.transition(input_action, (x, y))
                     } else if btn_rect.contains_point((*x, *y)) {
                         Action::Btn
                     } else {
@@ -79,14 +80,14 @@ fn main() -> Result<(), String> {
                     board.open((x, y));
                 },
                 (GameState::Play, Action::Open(x, y)) => {
-                    let lose = board.open((x, y));
-                    if lose {
+                    if board.open((x, y)) {
                         game_state = GameState::Lose;
                     }
                 },
                 (GameState::Play, Action::Chord(x, y)) => {
-                    board.chord((x, y));
-                    println!("Chord");
+                    if board.chord((x, y)) {
+                        game_state = GameState::Lose;
+                    }
                 },
                 (GameState::Play, Action::Flag(x, y)) => {
                     if board[(x, y)].open == false {
@@ -104,11 +105,6 @@ fn main() -> Result<(), String> {
 
         let mouse_state = event_pump.mouse_state();
         let (x, y) = Board::coord(mouse_state.x(), mouse_state.y());
-        input_state = match input_state {
-            InputState::Left(..) => InputState::Left(x, y),
-            InputState::Chord(..) => InputState::Chord(x, y),
-            _ => input_state, 
-        };
         spritesheet.draw(&mut canvas, Sprite::BtnSmile, rect!(BTN_X, BTN_Y, BTN_SIZE, BTN_SIZE))?;
 
         board.render(&mut canvas, &spritesheet, &game_state, &input_state)?;
